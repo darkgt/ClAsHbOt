@@ -56,6 +56,10 @@ Func AutoRaid(ByRef $hBMP, ByRef $timer, ByRef $THCorner)
 		 AutoRaidExecuteRaidStrategy2($hBMP)  ; BAM
 	  Case 3
 		 AutoRaidExecuteRaidStrategy3($hBMP)  ; Loonian
+	  Case 4
+		 AutoRaidExecuteRaidStrategy4($hBMP)  ; HoBarch
+	  Case 5
+		 AutoRaidExecuteRaidStrategy5($hBMP)  ; MiBarch
 	  EndSwitch
 
 	  $gAutoStage = $eAutoQueueTraining
@@ -193,8 +197,10 @@ Func AutoRaidFindMatch(ByRef $hBMP, Const $returnFirstMatch, ByRef $THCorner)
 EndFunc
 
 Func AutoWaitForNextButton(ByRef $hBMP)
+   Sleep(1000)
    _WinAPI_DeleteObject($hBMP)
-   $hBMP = CaptureFrameHBITMAP("AutoRaidFindMatch")
+   $hBMP = CaptureFrameHBITMAP("AutoWaitForNextButton")
+   If $gDebugSaveScreenCaptures Then _ScreenCapture_SaveImage("AutoWaitForNextButtonFrame.bmp", $hBMP, False)
 
    If WaitForButton($hBMP, 30000, $rWaitRaidScreenNextButton) = False Then
 	  If @error = $eErrorAttackingDisabled Then
@@ -265,15 +271,17 @@ Func CheckForRaidableBase(Const $townHall, Const $gold, Const $elix, Const $dark
    ; Adjust available loot to exclude storages?
    If $GUIIgnoreStorages And ($myTHLevel-$townHall<2 Or $myTHLevel>=11) Then ; "ignore storages" only valid if target TH<2 levels from my TH level. or my TH level>=11
 	  ; Check unadjusted first to possibly skip adjustment scan
-	  If $gold<$GUIGold Or $elix<$GUIElix Or $dark<$GUIDark Then
-		 DebugWrite("CheckForRaidableBase() No match (loot) gold=" & $gold & " elix=" & $elix & " dark=" & $dark)
+	  ; If $gold<$GUIGold Or $elix<$GUIElix Or $dark<$GUIDark Then
+	  If $gold + $elix < ($GUIGold + $GUIElix) Then
+	  	 DebugWrite("CheckForRaidableBase() No match (loot) gold=" & $gold & " elix=" & $elix & " dark=" & $dark)
 		 Return False
 	  EndIf
 
 	  Local $adjGold=$gold, $adjElix=$elix
 	  AdjustLootForStorages($townHall, $gold, $elix, $adjGold, $adjElix)
 
-	  If $adjGold<$GUIGold Or $adjElix<$GUIElix Or $dark<$GUIDark Then
+	  ;If $adjGold<$GUIGold Or $adjElix<$GUIElix Or $dark<$GUIDark Then
+	  If $adjGold + $adjElix < ($GUIGold + $GUIElix) Then
 		 DebugWrite("CheckForRaidableBase() No match (adj loot) (Adj: " & $adjGold & " / " & $adjElix & ")" )
 		 Return False
 	  Else
